@@ -90,7 +90,8 @@ void etheraccount::pushtx( const bytes& rlptx, const asset& txfee, uint32_t ram2
    check(ethtx.nonce == u256(from_itr->nonce), "invalid nonce");
 
    auto rp = get_action(1, 0).authorization[0].actor.value;
-   check(fee <= ethtx.get_fee(), "invalid fee");
+   auto max_to_pay = ethtx.get_fee();
+   check(fee <= max_to_pay, "invalid fee");
 
    if( ram2buy ) {
       auto ram2buy_cost = bytes_to_eos(ram2buy);
@@ -157,13 +158,14 @@ void etheraccount::pushtx( const bytes& rlptx, const asset& txfee, uint32_t ram2
       row.nonce += 1;
    });
 
+   check(fee.amount >= 0 || txfee.amount-fee.amount <= max_to_pay.amount, "transaction cost excedes max to pay");
+
    if( fee.amount > 0 ) {
       action(permission_level{ from_itr->eos_account, "active"_n },
          "eosio.token"_n, "transfer"_n, 
          std::make_tuple( from_itr->eos_account, rp, fee, std::string("fee") )
       ).send();
    }
-
 }
 
 asset etheraccount::create_new_account(name creator, const name& eos_account, const eth_address& address) {
