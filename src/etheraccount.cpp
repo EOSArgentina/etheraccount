@@ -22,7 +22,7 @@ using namespace etheraccount::utils;
 
 void etheraccount::on_transfer(name from, name to, asset quantity, std::string memo) {
 
-   if( from == get_self() ) return;
+   if( from == get_self() || from == "eosio.ram"_n ) return;
    check(to == get_self(), "not for me");
 
    auto amount = extended_asset{quantity, get_first_receiver()};
